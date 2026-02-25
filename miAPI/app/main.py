@@ -3,6 +3,7 @@ from fastapi import FastAPI, status, HTTPException
 import asyncio
 from typing import Optional
 # OPTIONAL Especificar que podemos mandar parametros o no
+from pydantic import BaseModel, Field  
 
 #Instancia del servidor 
 app= FastAPI(
@@ -17,6 +18,13 @@ usuarios=[
     {"id":2,"nombre":"Coral", "edad":21},
     {"id":3,"nombre":"Saul", "edad":21},
 ]
+
+#Modelo Pydantic de validacion 
+class crear_usuario(BaseModel):
+    id: int = Field (..., gt = 0, description = "identificador de usuario")
+    nombre: str = Field (..., min_lenhgt = 3, max_lenhgt = 50, example = "Juanito Doe")
+    edad: int = Field (..., ge = 1, le = 125, description = "Edad valida entre 1 y 125" )
+    
 
 #Endpoints tipo get 
 @app.get("/",tags=['Inicio'])
@@ -59,9 +67,9 @@ async def ConsultaT():
     }
 
 @app.post("/v1/usuarios/",tags=['CRUD HTTP'])
-async def agregar_usuario(usuario:dict):
+async def agregar_usuario(usuario:crear_usuario):
     for usr in usuarios:
-        if usr["id"] == usuario.get("id"):
+        if usr["id"] == usuario.id:
             raise HTTPException(
                 status_code = 400,
                 detail = "El id ya existe"
@@ -89,7 +97,7 @@ async def actualizar_usuario(id: int, usuario:dict):
         detail = "El id no existe"
     )
 
-@app.delete("/v1/usuarios/",tags=['CRUD HTTP'])
+@app.delete("/v1/usuarios/{id}",tags=['CRUD HTTP'])
 async def eliminar_usuario(id: int):
     for usr in usuarios:
         if usr["id"] == id:

@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi primer API Flask + FastAPI</title>
+<!--  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">-->
+</head>
+<body>
+
+<h1>REGISTRO DE USUARIOS</h1>
+
+<form action="/agregar" method="POST">
+    <input type="number" name="id" placeholder="ID" required>
+    <input type="text" name="nombre" placeholder="Nombre" required>
+    <input type="number" name="edad" placeholder="Edad" required>
+    <button type="submit">Agregar</button>
+</form>
+
+<h2>LISTA DE USUARIOS</h2>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>NOMBRE</th>
+        <th>EDAD</th>
+        <th>DATOS A ACTUALIZAR</th>
+    </tr>
+
+    {% for u in usuarios %}
+    <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.nombre }}</td>
+        <td>{{ u.edad }}</td>
+        <td>
+            <a href="/eliminar/{{ u.id }}">Eliminar</a>
+
+            <form action="/editar/{{ u.id }}" method="POST" style="display:inline;">
+                <input type="text" name="nombre" placeholder="Nuevo nombre" required>
+                <input type="number" name="edad" placeholder="Nueva edad" required>
+                <button type="submit">Actualizar</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
