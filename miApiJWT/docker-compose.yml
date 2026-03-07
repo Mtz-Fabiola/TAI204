@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    container_name: miApiJWT_server
+    ports:
+      - "8001:5000"
+    volumes:
+      - ./app:/app/app
+
+
+      
