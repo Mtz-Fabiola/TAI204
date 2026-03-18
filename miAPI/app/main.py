@@ -1,12 +1,6 @@
 #importaciones 
-from fastapi import FastAPI, status, HTTPException, Depends
-import asyncio
-from typing import Optional
-# OPTIONAL Especificar que podemos mandar parametros o no
-from pydantic import BaseModel, Field 
-from fastapi.security import HTTPBasic , HTTPBasicCredentials
-import secrets
-
+from fastapi import FastAPI, APIRouter
+from app.routers import usuarios, varios
 
 #Instancia del servidor 
 app= FastAPI(
@@ -15,115 +9,7 @@ app= FastAPI(
     version="1.0"
 )
 
-#Tabla ficticia
-usuarios=[
-    {"id":1,"nombre":"Diego", "edad":21},
-    {"id":2,"nombre":"Coral", "edad":21},
-    {"id":3,"nombre":"Saul", "edad":21},
-]
-
-#Modelo Pydantic de validacion 
-class crear_usuario(BaseModel):
-    id: int = Field (..., gt = 0, description = "identificador de usuario")
-    nombre: str = Field (..., min_lenhgt = 3, max_lenhgt = 50, example = "Juanito Doe")
-    edad: int = Field (..., ge = 1, le = 125, description = "Edad valida entre 1 y 125" )
-
-#Seguridad con HTTP BASIC
-Security = HTTPBasic()
-
-def verificar_peticion(credenciales: HTTPBasicCredentials = Depends(Security)):
-    usuarioAut = secrets.compare_digest(credenciales.username, "Fabiola")
-    raAut = secrets.compare_digest(credenciales.password, "123456")
-    
-    if not ( usuarioAut and raAut):
-        raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "Credenciales no autorizadas"
-        )
-    return credenciales.username
-
-#Endpoints tipo get 
-@app.get("/",tags=['Inicio'])
-async def bienvenido ():
-    return {"mensaje":"Bienvenido a FastAPI"}
-# ejemplo  {"Correo":"fm0560240@gmail.com"}
-
-@app.get("/holaMundo", tags=['Asincronia'])
-async def Hola ():
-    await asyncio.sleep(5) #peticion, consultaBD, Archivo
-    return {
-        "mensaje":"Hola Mundo FastAPI",
-        "status":"200"
-        }
-
-@app.get("/v1/ParametroOb/{id}",tags=['Parametro Obligatorio'])
-#{id} Se vuelve obligatorio
-async def Consultauno(id:int):
-    return {"mensaje":"Usuario encontrado",
-            "usuario":id,
-            "status":"200"
-            }
-
-@app.get("/v1/ParametroOp/",tags=['Parametro Opcional'])
-async def Consultados(id:Optional[int]=None):
-    if id is not None:
-        for usuarioK in usuarios:
-            if usuarioK["id"]== id:
-                return{"mensaje": "usuario encontrado","usuario":usuarioK}
-        return{"mensaje": "usuario no encontrado", "status":200}        
-    else:
-        return {"mensaje": "No se proporciono id", "status":200}
-    
-@app.get("/v1/usuarios/",tags=['CRUD HTTP'])
-async def ConsultaT():
-    return{
-        "status":"200",
-        "total":len(usuarios),
-        "Usuarios":usuarios
-    }
-
-@app.post("/v1/usuarios/",tags=['CRUD HTTP'])
-async def agregar_usuario(usuario:crear_usuario):
-    for usr in usuarios:
-        if usr["id"] == usuario.id:
-            raise HTTPException(
-                status_code = 400,
-                detail = "El id ya existe"
-            )
-    usuarios.append(usuario)
-    return{
-        "Mensaje": "Usuario agregado",
-        "Usuario": usuario,
-        "Status" : "200"
-    }    
-
-@app.put ("/v1/usuarios/{id}",tags=['CRUD HTTP'])
-async def actualizar_usuario(id: int, usuario:dict):
-    for usr in usuarios:
-        if usr["id"] == id:
-            usr["nombre"] = usuario.get("nombre")
-            usr["edad"] = usuario.get("edad")
-            return{
-                "mensaje": "Usuario actualizado",
-                "Usuario": usr,
-                "Status": "200"
-            }
-    raise HTTPException(
-        status_code = 400,
-        detail = "El id no existe"
-    )
-
-@app.delete("/v1/usuarios/{id}",tags=['CRUD HTTP'],)
-async def eliminar_usuario(id: int, usuarioAuth: str = Depends (verificar_peticion)):
-    for usr in usuarios:
-        if usr["id"] == id:
-         usuarios.remove(usr)
-         return{
-            "Mensaje": f"Usuario eliminado por {usuarioAuth}"
-        }
-    raise HTTPException(
-        status_code = 400,
-        detail = "El id no existe"
-    )
+app.include_router(usuarios.router)
+app.include_router(varios.routerV)
 
 
