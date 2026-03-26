@@ -28,4 +28,6 @@ async def Consultados(id: Optional[int] = None):
     else:
         return {"mensaje": "No se proporciono id", "status": 200}
     
+
+    
     
